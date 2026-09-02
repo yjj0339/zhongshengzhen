@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#070a14" />
+<meta name="color-scheme" content="dark" />
+<title>众生镇 · 二十四魂的粒子小镇</title>
+<style>
+  :root {
+    --bg: #070a14;
+    --glass: rgba(10, 15, 28, 0.58);
+    --glass2: rgba(8, 12, 24, 0.78);
+    --line: rgba(255, 214, 150, 0.14);
+    --line2: rgba(140, 180, 255, 0.12);
+    --ink: #f2ead9;
+    --mut: #9aa3bd;
+    --gold: #ffcf7d;
+    --gold2: #ff9d5c;
+    --cyan: #7fd8ff;
+    --violet: #b48cff;
+    --bad: #ff7d6b;
+    --ok: #7dedb2;
+    --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+    --sans: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; overflow: hidden; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  #app { position: fixed; inset: 0; }
+  #app canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  /* ── 启动/标题 ─────────────────────────── */
+  .veil {
+    position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: radial-gradient(120% 100% at 50% 10%, #131a30 0%, #0a0e1c 55%, #05070f 100%);
+    transition: opacity 1.1s ease; padding: 24px;
+  }
+  .veil.hide { opacity: 0; pointer-events: none; }
+  .veil .star { position:absolute; border-radius:50%; background:#fff; opacity:.5; animation: tw 3s ease-in-out infinite; }
+  @keyframes tw { 0%,100%{opacity:.15} 50%{opacity:.75} }
+  .boot-name {
+    font-family: var(--serif); font-size: 15px; letter-spacing: .6em; text-indent: .6em;
+    color: var(--gold); margin-bottom: 18px; opacity: .9;
+  }
+  .boot-bar { width: min(280px, 64vw); height: 3px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .boot-bar i { display: block; height: 100%; width: 0%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--gold2), var(--gold), #ffe9bd); transition: width .35s ease; }
+  .boot-step { margin-top: 14px; font-size: 12px; letter-spacing: .3em; color: var(--mut); }
+
+  #title .t-name {
+    font-family: var(--serif); font-size: clamp(52px, 11vw, 92px); font-weight: 600;
+    letter-spacing: .3em; text-indent: .3em; line-height: 1.15;
+    background: linear-gradient(165deg, #fff7e8 10%, #ffd9a0 45%, #e2925a 85%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 6px 40px rgba(255, 170, 90, .28));
+  }
+  #title .t-sub { margin-top: 16px; font-size: 13px; letter-spacing: .42em; text-indent:.42em; color: var(--mut); }
+  #title .t-desc {
+    margin-top: 22px; font-size: 13.5px; line-height: 2.15; color: #c7cede;
+    max-width: 520px; text-align: center;
+  }
+  #title .t-desc b { color: var(--gold); font-weight: 600; }
+  #title .t-enter {
+    margin-top: 34px; padding: 15px 52px; border: 0; border-radius: 99px; cursor: pointer;
+    font-family: var(--serif); font-size: 17px; letter-spacing: .5em; text-indent: .5em; color: #241204;
+    background: linear-gradient(135deg, #ffe3ae, #ffb35e 60%, #ff9440);
+    box-shadow: 0 10px 44px rgba(255, 160, 70, .35), inset 0 1px 0 rgba(255,255,255,.5);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  #title .t-enter:active { transform: scale(.96); }
+  #title .t-hint { margin-top: 18px; font-size: 11px; letter-spacing: .2em; color: rgba(154,163,189,.65); }
+
+  /* ── HUD ──────────────────────────────── */
+  #hud { position: fixed; inset: 0; z-index: 10; pointer-events: none; opacity: 0; transition: opacity .8s ease; }
+  #hud.show { opacity: 1; }
+  .hud-top {
+    position: absolute; left: 0; right: 0; top: 0;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 0 calc(14px + env(safe-area-inset-left));
+  }
+  .brand { display: flex; align-items: baseline; gap: 12px; pointer-events: none; }
+  .brand h1 {
+    font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .34em;
+    background: linear-gradient(160deg, #fff4e0 15%, #ffcf8a 60%, #d98a4e 95%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .clock { display: flex; align-items: center; gap: 8px; margin-top: 6px;
+    font-size: 11px; letter-spacing: .18em; color: var(--mut); }
+  .clock .phase { color: var(--gold); }
+  .dot-ico { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  .hud-btns { display: flex; gap: 8px; pointer-events: auto; }
+  .hbtn {
+    min-width: 40px; height: 40px; padding: 0 13px; border-radius: 14px; border: 1px solid var(--line2);
+    background: var(--glass); color: #dfe5f2; font-size: 12px; letter-spacing: .14em; cursor: pointer;
+    backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%);
+    box-shadow: 0 6px 22px rgba(0,0,0,.35); transition: border-color .2s, transform .12s;
+    display: flex; align-items: center; justify-content: center; font-family: var(--sans);
+  }
+  .hbtn:active { transform: scale(.93); }
+  .hbtn.on { border-color: rgba(255,207,125,.55); color: var(--gold); }
+
+  /* 神谕输入 */
+  .oracle-wrap {
+    position: absolute; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom));
+    transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); pointer-events: auto;
+  }
+  .oracle {
+    display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px;
+    border-radius: 18px; border: 1px solid rgba(255, 207, 125, .28);
+    background: var(--glass2); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: 0 12px 40px rgba(0,0,0,.5), 0 0 30px rgba(255,180,90,.06);
+  }
+  .oracle .glyph {
+    font-family: var(--serif); font-size: 15px; color: var(--gold);
+    width: 30px; height: 30px; border-radius: 10px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 40%, rgba(255,200,120,.22), rgba(255,200,120,0));
+    border: 1px solid rgba(255,207,125,.3);
+  }
+  .oracle input {
+    flex: 1; min-width: 0; height: 36px; border: 0; outline: 0; background: transparent;
+    color: var(--ink); font-size: 14px; letter-spacing: .05em; font-family: var(--sans);
+  }
+  .oracle input::placeholder { color: rgba(154,163,189,.55); }
+  .oracle button {
+    flex: none; height: 36px; padding: 0 18px; border: 0; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(135deg, #ffd98e, #ff9d55); color: #2b1503;
+    font-size: 13px; font-weight: 700; letter-spacing: .3em; text-indent: .3em; font-family: var(--sans);
+  }
+  .oracle button:active { opacity: .8; }
+  .oracle-chips { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; padding: 0 4px; scrollbar-width: none; }
+  .oracle-chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; padding: 6px 13px; border-radius: 99px; font-size: 11.5px; letter-spacing: .1em;
+    color: #cdb896; background: rgba(255, 200, 130, .07); border: 1px solid rgba(255, 207, 125, .18);
+    cursor: pointer; pointer-events: auto; white-space: nowrap;
+  }
+  .chip:active { background: rgba(255,200,130,.18); }
+
+  /* 镇上新事（日志） */
+  .feed {
+    position: absolute; left: calc(14px + env(safe-area-inset-left)); bottom: calc(96px + env(safe-area-inset-bottom));
+    width: min(300px, 62vw); display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+  }
+  .feed .item {
+    padding: 9px 13px; border-radius: 12px; font-size: 12px; line-height: 1.75; letter-spacing: .03em;
+    color: #d9dff0; background: var(--glass); border: 1px solid var(--line2);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    animation: feedIn .45s ease both; max-height: 200px; overflow: auto;
+  }
+  .feed .item b { color: var(--gold); font-weight: 600; }
+  .feed .item.rumor b { color: var(--bad); }
+  .feed .item .tag {
+    display: inline-block; font-size: 10px; padding: 1px 8px; margin-right: 6px; border-radius: 99px;
+    letter-spacing: .15em; color: var(--gold); border: 1px solid rgba(255,207,125,.3); vertical-align: 1px;
+  }
+  .feed .item.rumor .tag { color: var(--bad); border-color: rgba(255,125,107,.4); }
+  @keyframes feedIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .feed .item.old { opacity: .38; }
+
+  /* 神谕回应面板 */
+  .reply {
+    position: absolute; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    width: min(500px, calc(100vw - 30px)); padding: 14px 18px; border-radius: 16px;
+    background: linear-gradient(160deg, rgba(46,32,14,.82), rgba(18,14,10,.85));
+    border: 1px solid rgba(255, 200, 120, .4); color: #ffe9c8;
+    font-family: var(--serif); font-size: 15px; line-height: 2; letter-spacing: .06em;
+    box-shadow: 0 16px 50px rgba(0,0,0,.55), 0 0 40px rgba(255,170,80,.1);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    opacity: 0; pointer-events: none; transition: opacity .5s ease, transform .5s ease; z-index: 12;
+  }
+  .reply.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+  .reply .who { font-size: 11px; letter-spacing: .4em; color: var(--gold); margin-bottom: 6px; }
+
+  /* 居民档案 */
+  .dossier {
+    position: absolute; right: 0; top: 0; bottom: 0; width: min(330px, 88vw); z-index: 20;
+    padding: calc(70px + env(safe-area-inset-top)) 18px calc(110px + env(safe-area-inset-bottom)) 18px;
+    background: linear-gradient(200deg, rgba(14,12,10,.86), rgba(8,10,18,.92));
+    border-left: 1px solid var(--line); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    transform: translateX(105%); transition: transform .45s cubic-bezier(.22,1,.3,1); overflow-y: auto;
+    pointer-events: auto;
+  }
+  .dossier.show { transform: none; }
+  .dossier .close { position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 14px;
+    width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line2); background: var(--glass);
+    color: var(--mut); font-size: 15px; cursor: pointer; }
+  .d-seal {
+    width: 54px; height: 54px; border-radius: 14px; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 24px; color: #140b02; font-weight: 700;
+    box-shadow: 0 6px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .d-name { font-family: var(--serif); font-size: 24px; letter-spacing: .18em; }
+  .d-job { margin-top: 5px; font-size: 12px; letter-spacing: .25em; color: var(--gold); }
+  .d-mood { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #cfd6e6; }
+  .d-mood i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 10px currentColor; }
+  .d-sec { margin-top: 18px; }
+  .d-sec h4 { font-size: 11px; letter-spacing: .3em; color: var(--mut); margin-bottom: 8px; }
+  .d-mems { display: flex; flex-direction: column; gap: 5px; }
+  .d-mems span { font-size: 12px; line-height: 1.7; color: #c3cad9; padding: 7px 11px; border-radius: 10px;
+    background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.05); }
+  .d-mems span.good { border-color: rgba(125,237,178,.2); } .d-mems span.bad { border-color: rgba(255,125,107,.22); }
+  .d-rel { display: flex; flex-wrap: wrap; gap: 6px; }
+  .d-rel span { font-size: 11.5px; padding: 5px 10px; border-radius: 99px; letter-spacing: .06em;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: #cfd6e6; cursor: pointer; }
+  .d-acts { display: flex; gap: 8px; margin-top: 20px; }
+  .d-acts button { flex: 1; height: 40px; border-radius: 12px; border: 1px solid rgba(255,207,125,.3);
+    background: rgba(255,190,110,.08); color: var(--gold); font-size: 12.5px; letter-spacing: .2em; cursor: pointer; }
+  .d-acts button:active { background: rgba(255,190,110,.2); }
+
+  /* 名录 */
+  .modal {
+    position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center;
+    background: rgba(4,6,12,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 20px;
+  }
+  .modal.show { display: flex; }
+  .sheet {
+    width: min(560px, 100%); max-height: min(72vh, 640px); overflow: hidden; display: flex; flex-direction: column;
+    border-radius: 20px; border: 1px solid var(--line2); background: var(--glass2);
+    box-shadow: 0 30px 90px rgba(0,0,0,.6);
+  }
+  .sheet header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 12px; }
+  .sheet header h3 { font-family: var(--serif); font-size: 16px; letter-spacing: .35em; color: var(--gold); }
+  .sheet header .close { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line2);
+    background: transparent; color: var(--mut); cursor: pointer; font-size: 14px; }
+  .sheet .body { overflow-y: auto; padding: 4px 16px 16px; }
+  .roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .rp { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); transition: background .2s; }
+  .rp:active, .rp:hover { background: rgba(255,200,130,.1); }
+  .rp .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: 0 0 10px currentColor; }
+  .rp .nm { font-size: 13px; letter-spacing: .08em; }
+  .rp .jb { font-size: 10px; color: var(--mut); margin-top: 2px; letter-spacing: .1em; }
+
+  .set-rows { padding: 6px 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .set-row label { display: flex; justify-content: space-between; font-size: 12.5px; color: #cfd6e6; letter-spacing: .1em; }
+  .set-row .note { font-size: 11px; color: var(--mut); margin-top: 5px; line-height: 1.8; }
+  .set-row input[type=text], .set-row input[type=password] {
+    width: 100%; margin-top: 7px; height: 38px; border-radius: 10px; border: 1px solid var(--line2);
+    background: rgba(255,255,255,.05); color: var(--ink); padding: 0 12px; font-size: 13px; outline: none;
+  }
+  .seg { display: flex; gap: 6px; margin-top: 8px; }
+  .seg button { flex: 1; height: 36px; border-radius: 10px; border: 1px solid var(--line2); background: rgba(255,255,255,.04);
+    color: #cfd6e6; font-size: 12px; letter-spacing: .2em; cursor: pointer; }
+  .seg button.on { border-color: rgba(255,207,125,.5); color: var(--gold); background: rgba(255,200,130,.1); }
+  .set-row textarea {
+    width: 100%; min-height: 74px; margin-top: 7px; border-radius: 10px; border: 1px solid var(--line2);
+    background: rgba(255,255,255,.05); color: var(--ink); padding: 10px 12px; font-size: 12.5px; outline: none;
+    resize: vertical; font-family: var(--sans); line-height: 1.7;
+  }
+
+  /* 提示气泡（3D 对话浮字）在 WebGL 内绘制，无需 DOM */
+  .toast {
+    position: fixed; left: 50%; top: calc(18px + env(safe-area-inset-top)); transform: translateX(-50%);
+    z-index: 60; padding: 10px 18px; border-radius: 12px; font-size: 12.5px; letter-spacing: .08em;
+    background: var(--glass2); border: 1px solid var(--line); color: var(--ink);
+    opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 86vw; text-align: center;
+  }
+  .toast.show { opacity: 1; }
+  .glow-orb {
+    position: fixed; z-index: 9; border-radius: 50%; pointer-events: none;
+    filter: blur(60px); opacity: .5; mix-blend-mode: screen;
+  }
+
+  @media (max-width: 620px) {
+    .brand h1 { font-size: 17px; }
+    .hbtn { padding: 0 11px; min-width: 38px; font-size: 11px; }
+    .feed { bottom: calc(120px + env(safe-area-inset-bottom)); width: min(260px, 58vw); }
+    .feed .item { font-size: 11px; padding: 7px 11px; }
+    #title .t-desc { font-size: 12.5px; }
+    .oracle-chips { margin-top: 6px; }
+    .reply { font-size: 13.5px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div>
+      <div class="brand"><h1>众 生 镇</h1></div>
+      <div class="clock">
+        <span class="dot-ico" id="phaseDot"></span>
+        <span id="dayN">第 1 日</span><span>·</span><span id="timeN">黄昏</span><span>·</span>
+        <span id="weatherN">晴</span><span>·</span><span id="popN">24 魂</span>
+      </div>
+    </div>
+    <div class="hud-btns">
+      <button class="hbtn" id="btnRoster" title="居民名录">名录</button>
+      <button class="hbtn" id="btnCam" title="运镜">环景</button>
+      <button class="hbtn" id="btnAudio" title="音效">音效</button>
+      <button class="hbtn" id="btnSettings" title="设置">设置</button>
+    </div>
+  </div>
+
+  <div class="feed" id="feed"></div>
+  <div class="reply" id="reply"><div class="who">神 谕 回 应</div><div id="replyTxt"></div></div>
+
+  <div class="oracle-wrap">
+    <div class="oracle">
+      <div class="glyph">谕</div>
+      <input id="oracleInput" type="text" placeholder="以神之名下令…… 试试「降一场流星雨」或「让镇民起舞」" maxlength="60" />
+      <button id="oracleBtn">降谕</button>
+    </div>
+    <div class="oracle-chips" id="chips">
+      <span class="chip" data-q="办一场丰收祭">丰收祭</span>
+      <span class="chip" data-q="降一场流星雨">流星雨</span>
+      <span class="chip" data-q="召唤一场雷雨">雷雨</span>
+      <span class="chip" data-q="让全镇起舞">起舞</span>
+      <span class="chip" data-q="时间来到夜晚">入夜</span>
+      <span class="chip" data-q="湖里有怪物吗">湖怪</span>
+      <span class="chip" data-q="让大家认识一下彼此">相识</span>
+    </div>
+  </div>
+
+  <!-- 居民档案 -->
+  <div class="dossier" id="dossier">
+    <button class="close" id="dClose">✕</button>
+    <div class="d-seal" id="dSeal">阿</div>
+    <div class="d-name" id="dName">——</div>
+    <div class="d-job" id="dJob">——</div>
+    <div class="d-mood"><i id="dMoodDot"></i><span id="dMood">心情 ——</span><span style="opacity:.4">|</span><span id="dDoing">——</span></div>
+    <div class="d-sec"><h4>近 事 · 记 忆</h4><div class="d-mems" id="dMems"></div></div>
+    <div class="d-sec"><h4>牵 挂 的 人</h4><div class="d-rel" id="dRel"></div></div>
+    <div class="d-acts">
+      <button id="dFollow">跟随此魂</button>
+      <button id="dBless">赐福</button>
+    </div>
+  </div>
+</div>
+
+<!-- 名录 -->
+<div class="modal" id="mRoster">
+  <div class="sheet">
+    <header><h3>居 民 名 录</h3><button class="close" data-close="mRoster">✕</button></header>
+    <div class="body"><div class="roster" id="rosterGrid"></div></div>
+  </div>
+</div>
+
+<!-- 设置 -->
+<div class="modal" id="mSettings">
+  <div class="sheet">
+    <header><h3>设 置</h3><button class="close" data-close="mSettings">✕</button></header>
+    <div class="set-rows">
+      <div class="set-row">
+        <label>画质</label>
+        <div class="seg" id="segQuality"><button data-v="high" class="on">高（泛光）</button><button data-v="low">流畅</button></div>
+        <div class="note">低画质关闭泛光与半数粒子，适合旧手机。</div>
+      </div>
+      <div class="set-row">
+        <label>时间流速</label>
+        <div class="seg" id="segSpeed"><button data-v="1" class="on">常速</button><button data-v="3">三倍</button><button data-v="8">八倍</button></div>
+      </div>
+      <div class="set-row">
+        <label>真·大模型神谕（可选）</label>
+        <input type="password" id="llmKey" placeholder="粘贴 API Key（留空则用本地智慧）" />
+        <input type="text" id="llmBase" placeholder="Base URL，默认 https://dashscope.aliyuncs.com/compatible-mode/v1" />
+        <input type="text" id="llmModel" placeholder="模型名，默认 qwen-plus" />
+        <div class="note">填入任意 OpenAI 兼容接口的 Key 后，神谕与镇民对话将由大模型实时生成；仅保存在本机浏览器。</div>
+      </div>
+      <div class="set-row">
+        <label>玩法提示</label>
+        <div class="note">① 点击任意魂体查看它的名字、记忆与牵挂　② 底部输入神谕可改写天气、节日与命运　③ 「环景」进入自动运镜　④ 昼夜每四分钟一轮，夜里记得看萤火虫与灯火。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 标题 -->
+<div class="veil" id="boot">
+  <div class="boot-name">一 座 会 呼 吸 的 小 镇</div>
+  <div class="boot-bar"><i id="bootBar"></i></div>
+  <div class="boot-step" id="bootStep">唤醒世界……</div>
+</div>
+
+<div class="veil hide" id="title">
+  <div class="t-name">众 生 镇</div>
+  <div class="t-sub">二 十 四 魂 · 一 座 粒 子 小 镇</div>
+  <p class="t-desc">
+    镇上住着二十四团有名字的魂火：<b>铁匠、诗人、更夫、酒馆老板娘……</b><br>
+    它们各自劳作、闲聊、吵架、传谣、在节日里围着喷泉起舞。<br>
+    你是这座镇的神——<b>说一句话</b>，让流星落下，让节日开始，<br>
+    让两个陌生人成为挚友，或者看一场谣言如何染红小镇的夜。
+  </p>
+  <button class="t-enter" id="btnEnter">进 入 小 镇</button>
+  <div class="t-hint">建议横屏 / 全屏体验 · 电脑与手机均可运行</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  window.__errs = [];
+  addEventListener('error', e => { const m = String(e.message || e) + '\n' + String(e.error && e.error.stack || '').split('\n').slice(0, 4).join(' | '); if (window.__errs.length < 8) window.__errs.push(m); const s = document.getElementById('bootStep'); if (s) s.textContent = '出错: ' + String(e.message || e).slice(0, 300); });
+  addEventListener('unhandledrejection', e => { window.__errs.push('REJ:' + String(e.reason)); const s = document.getElementById('bootStep'); if (s) s.textContent = '出错: ' + String(e.reason).slice(0, 300); });
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "./lib/three.module.js",
+  "three/addons/": "./lib/addons/"
+} }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
