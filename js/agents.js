@@ -172,6 +172,10 @@ export class World {
   }
 
   goTo(a, node) {
+    if (node === undefined || node === null || !this.town.graph.nodes[node]) {
+      console.error('[zhongshengzhen] goTo 非法节点:', node, '| agent:', a.name, '| state:', a.state, new Error().stack);
+      return;
+    }
     a.path = this.pathTo(a.x, a.z, node);
     a.pathI = 0;
     a.state = 'goto';
@@ -333,8 +337,11 @@ export class World {
     if (a.state !== 'goto' || !a.path) return;
     const nodes = this.town.graph.nodes;
     let tx, tz;
-    if (a.pathI < a.path.length) { const n = nodes[a.path[a.pathI]]; tx = n.x; tz = n.z; }
-    else if (a._eventSpot) { tx = a._eventSpot.x; tz = a._eventSpot.z; }
+    if (a.pathI < a.path.length) {
+      const n = nodes[a.path[a.pathI]];
+      if (!n) { a.state = 'idle'; a.path = []; return; }
+      tx = n.x; tz = n.z;
+    } else if (a._eventSpot) { tx = a._eventSpot.x; tz = a._eventSpot.z; }
     else {
       // 到达
       a.state = 'idle'; a.path = []; a.arrived = true;
