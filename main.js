@@ -125,6 +125,23 @@ btnAudio.addEventListener('click', () => {
   btnAudio.classList.toggle('on', audio.toggle());
 });
 
+/* ── 画布自适应：拖动/转向/分屏后尺寸不同步会造成黑边，每帧兜底检查 ── */
+let lastW = 0, lastH = 0;
+function fitCanvas(force) {
+  const cw = app.clientWidth | 0, ch = app.clientHeight | 0;
+  if (!cw || !ch) return;
+  if (force || cw !== lastW || ch !== lastH) {
+    lastW = cw; lastH = ch;
+    camera.aspect = cw / ch;
+    camera.updateProjectionMatrix();
+    renderer.setSize(cw, ch, false);
+    composer.setSize(cw, ch);
+  }
+}
+function onResize() { fitCanvas(true); }
+addEventListener('resize', onResize);
+addEventListener('orientationchange', onResize);
+
 /* ── 主循环 ── */
 const clock = new THREE.Clock();
 let timeSec = 0, cineA = 0, hudTimer = 0, lightningAt = 0;
@@ -132,6 +149,7 @@ function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), 0.05);
   timeSec += dt;
+  fitCanvas(false);
   const T = G.time;
   T.t += dt * T.speed / CFG.DAY_LENGTH;
   if (T.t >= 1) { T.t -= 1; T.day++; bus.emit('day'); }
@@ -182,10 +200,3 @@ setTimeout(() => {
 window.__shot = () => { composer.render(); return renderer.domElement.toDataURL('image/png'); };
 window.__G = G; window.__world = world;
 window.__cam = { camera, controls, set(x, y, z, tx, ty, tz) { camera.position.set(x, y, z); controls.target.set(tx, ty, tz); } };
-
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-  composer.setSize(innerWidth, innerHeight);
-});

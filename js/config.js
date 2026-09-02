@@ -14,17 +14,17 @@ const K = (t, sky, hor, fog, sun, sunI, ambI, sunEl, sunAz) => ({ t, sky, hor, f
 const C = (h) => h;
 
 export const SKY_KEYS = [
-  K(0.00, C(0x8fb2de), C(0xffe2ba), C(0xd9e3ee), C(0xfff0d8), 0.5, 0.66, 0.75, 0.4),   // 星夜（亮）
-  K(0.20, C(0x96b8e2), C(0xffe6c2), C(0xdde6f0), C(0xffe8c8), 0.55, 0.68, 0.45, 1.2),  // 黎明前
-  K(0.26, C(0x9ec8ee), C(0xffd9a6), C(0xf4e5d4), C(0xffcf90), 0.95, 0.76, 0.06, 1.5),  // 日出
-  K(0.35, C(0x8ecaf2), C(0xecf5fc), C(0xe6eff6), C(0xfff6e2), 1.35, 0.88, 0.45, 1.6),  // 上午
-  K(0.50, C(0x7fc2f2), C(0xeaf6fc), C(0xe6eff6), C(0xffffff), 1.5, 0.95, 0.95, 1.7),   // 正午
-  K(0.66, C(0x88bcec), C(0xf2f2f4), C(0xeaf0f4), C(0xfff2dc), 1.3, 0.88, 0.5, 1.8),    // 午后
-  K(0.715,C(0x8cacdf), C(0xffd29a), C(0xf7e3c6), C(0xffcf88), 1.1, 0.8, 0.12, 1.95),   // 黄昏金
-  K(0.755,C(0x84a0d2), C(0xffba88), C(0xeccec4), C(0xffb070), 0.75, 0.7, 0.02, 2.1),   // 日落
-  K(0.80, C(0x8ca8da), C(0xffdcba), C(0xdce2f0), C(0xffe0b8), 0.55, 0.66, 0.5, 2.6),   // 暮色（亮）
-  K(0.87, C(0x82a0d6), C(0xffd6b0), C(0xd4e0ee), C(0xffe4c0), 0.5, 0.64, 0.8, 2.9),    // 夜（明亮星夜）
-  K(1.00, C(0x8fb2de), C(0xffe2ba), C(0xd9e3ee), C(0xfff0d8), 0.5, 0.66, 0.75, 0.4),   // 回到星夜
+  K(0.00, C(0x76a4e0), C(0xffe2ba), C(0xd9e3ee), C(0xfff0d8), 0.5, 0.66, 0.75, 0.4),   // 星夜（亮）
+  K(0.20, C(0x7aa6e2), C(0xffe6c2), C(0xdde6f0), C(0xffe8c8), 0.55, 0.68, 0.45, 1.2),  // 黎明前
+  K(0.26, C(0x84c0f0), C(0xffd9a6), C(0xf4e5d4), C(0xffcf90), 0.95, 0.76, 0.06, 1.5),  // 日出
+  K(0.35, C(0x74b8ee), C(0xecf5fc), C(0xe6eff6), C(0xfff6e2), 1.35, 0.88, 0.45, 1.6),  // 上午
+  K(0.50, C(0x5fb0ee), C(0xeaf6fc), C(0xe6eff6), C(0xffffff), 1.5, 0.95, 0.95, 1.7),   // 正午
+  K(0.66, C(0x6aaee8), C(0xf2f2f4), C(0xeaf0f4), C(0xfff2dc), 1.3, 0.88, 0.5, 1.8),    // 午后
+  K(0.715,C(0x74a4e4), C(0xffd29a), C(0xf7e3c6), C(0xffcf88), 1.1, 0.8, 0.12, 1.95),   // 黄昏金
+  K(0.755,C(0x6c98dc), C(0xffba88), C(0xeccec4), C(0xffb070), 0.75, 0.7, 0.02, 2.1),   // 日落
+  K(0.80, C(0x74a0e0), C(0xffdcba), C(0xdce2f0), C(0xffe0b8), 0.55, 0.66, 0.5, 2.6),   // 暮色（亮）
+  K(0.87, C(0x6a98dc), C(0xffd6b0), C(0xd4e0ee), C(0xffe4c0), 0.5, 0.64, 0.8, 2.9),    // 夜（明亮星夜）
+  K(1.00, C(0x76a4e0), C(0xffe2ba), C(0xd9e3ee), C(0xfff0d8), 0.5, 0.66, 0.75, 0.4),   // 回到星夜
 ];
 
 export const PAL = {
