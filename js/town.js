@@ -136,8 +136,8 @@ function coneAt(list, r, h, seg, x, y, z, hex, ry = 0) {
   const g = new THREE.ConeGeometry(r, h, seg); paint(g, hex); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(g);
 }
 
-const ROOFS = [0xb5714f, 0x9a6a48, 0x8a7690, 0xb08a4a, 0xc07a56, 0x7d6a56];
-const WALLS = [0xe3d2ac, 0xd6bd94, 0xccae82, 0xdfc19c, 0xd8c8a6, 0xcaa985];
+const ROOFS = [0xd88a5a, 0xc97e56, 0x9a86b8, 0xd8a860, 0xb8724e, 0x8a94a8];
+const WALLS = [0xfff2d8, 0xffe8c4, 0xf8ddb2, 0xfff8e8, 0xf4dcbc, 0xefd4ae];
 
 function makeSign(text, w = 2.6) {
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 96;
@@ -163,6 +163,7 @@ export class Town {
     this._buildPlaza();
     this._buildNature();
     this._buildLights();
+    this._buildDetails();
     this.graph = buildGraph(houses);
     scene.add(this.group);
   }
@@ -174,9 +175,9 @@ export class Town {
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
-    const cGrassA = new THREE.Color(0x5c8a3c), cGrassB = new THREE.Color(0x8ab356),
-      cDirt = new THREE.Color(0x9d7f55), cStone = new THREE.Color(0xb2a68f),
-      cSand = new THREE.Color(0xcdb27a), cMud = new THREE.Color(0x55503f), cForest = new THREE.Color(0x47663d);
+    const cGrassA = new THREE.Color(0x8cc45e), cGrassB = new THREE.Color(0xaad470),
+      cDirt = new THREE.Color(0xd9bc8c), cStone = new THREE.Color(0xece2cc),
+      cSand = new THREE.Color(0xf2dca6), cMud = new THREE.Color(0x9a9070), cForest = new THREE.Color(0x74a850);
     const tmp = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), z = pos.getZ(i);
@@ -225,19 +226,19 @@ export class Town {
           return mix(mix(h21(i),h21(i+vec2(1,0)),u.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),u.x),u.y);}
         void main(){
           float r = length(vP.xz);
-          vec3 deep = mix(vec3(0.09,0.17,0.24), vec3(0.02,0.04,0.10), uNight);
-          vec3 shal = mix(uHorizon*0.5, vec3(0.08,0.12,0.24), uNight);
+          vec3 deep = mix(vec3(0.32,0.66,0.78), vec3(0.38,0.58,0.80), uNight);
+          vec3 shal = mix(uHorizon*0.55 + vec3(0.06,0.16,0.18), vec3(0.55,0.70,0.88), uNight);
           vec3 col = mix(deep, shal, smoothstep(40.0, 18.0, r));
           float w1 = vn(vP.xz*0.55 + vec2(uTime*0.25, uTime*0.11));
           float w2 = vn(vP.xz*1.4  - vec2(uTime*0.18, uTime*0.31));
           float sp = smoothstep(0.86, 0.97, w1*0.6 + w2*0.5);
-          col += sp * mix(vec3(1.0,0.92,0.75)*0.34, vec3(0.45,0.58,0.9)*0.16, uNight) * uGlow;
+          col += sp * mix(vec3(1.0,0.98,0.9)*0.5, vec3(0.85,0.92,1.0)*0.4, uNight) * uGlow;
           vec2 dir = normalize(vP.xz);
           float streak = pow(max(dot(dir, uSunAz), 0.0), 60.0);
-          col += streak * mix(vec3(1.0,0.72,0.42)*0.5, vec3(0.5,0.6,0.95)*0.12, uNight) * uGlow;
+          col += streak * mix(vec3(1.0,0.85,0.6)*0.42, vec3(0.9,0.92,1.0)*0.25, uNight) * uGlow;
           float foam = smoothstep(43.0, 45.5, r) * (0.5 + 0.5*sin(r*6.0 - uTime*1.8 + vn(vP.xz*0.5)*6.0));
-          col += foam * vec3(0.85) * 0.1;
-          gl_FragColor = vec4(col, 0.93);
+          col += foam * vec3(1.0) * 0.16;
+          gl_FragColor = vec4(col, 0.88);
         }`,
     });
     const mesh = new THREE.Mesh(geo, mat);
@@ -783,6 +784,160 @@ export class Town {
     this.group.add(poolMesh);
   }
 
+  /* ── 细节层：草丛 / 路缘石 / 栅栏 / 货箱 / 推车 / 晾衣绳 / 鸭子 / 飞鸟 / 地平线 ── */
+  _buildDetails() {
+    const rnd = (() => { let s = 77; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3();
+
+    // 地平线大圆盘（拖到地图边缘也不露黑底）
+    this.horizonDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(850, 32).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: 0xd9e3ee, fog: true })
+    );
+    this.horizonDisc.position.y = -2.2;
+    this.group.add(this.horizonDisc);
+
+    // 草丛（风摆）
+    const tuftG = new THREE.PlaneGeometry(0.55, 0.4); tuftG.translate(0, 0.2, 0);
+    const tuftG2 = tuftG.clone(); tuftG2.rotateY(Math.PI / 2);
+    const tuftN = this.quality === 'high' ? 520 : 280;
+    const tuftM = new THREE.InstancedMesh(mergeGeometries([tuftG, tuftG2]), this._wheatMat(), tuftN);
+    const tPh = new Float32Array(tuftN), tCols = new Float32Array(tuftN * 3);
+    let ti = 0;
+    for (let i = 0; i < tuftN * 3 && ti < tuftN; i++) {
+      const a = rnd() * Math.PI * 2, r = 8 + rnd() * 78;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      if (distToRoads(x, z) < 2.6) continue;
+      if (Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r + 2) continue;
+      if (z < -56) continue;
+      const y = terrainH(x, z);
+      m4.compose(new THREE.Vector3(x, y, z), q.setFromEuler(new THREE.Euler(0, rnd() * 3, 0)), sc.set(0.8 + rnd() * 0.6, 0.8 + rnd() * 0.7, 1));
+      tuftM.setMatrixAt(ti, m4);
+      tPh[ti] = rnd() * 6.28;
+      _c.setHex(0x6fae4a).lerp(new THREE.Color(0x8fc45e), rnd());
+      tCols[ti * 3] = _c.r; tCols[ti * 3 + 1] = _c.g; tCols[ti * 3 + 2] = _c.b;
+      ti++;
+    }
+    tuftM.count = ti; tuftM.instanceMatrix.needsUpdate = true;
+    tuftM.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(tPh, 1));
+    tuftM.geometry.setAttribute('aCol', new THREE.InstancedBufferAttribute(tCols, 3));
+    this.group.add(tuftM);
+
+    // 路缘石（广场外圈 + 一环）
+    const stoneG = new THREE.DodecahedronGeometry(0.26, 0); paint(stoneG, 0xcfc4ac);
+    const curbM = new THREE.InstancedMesh(stoneG, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, flatShading: true }), 64);
+    let ci = 0;
+    for (let k = 0; k < 40 && ci < 64; k++) {
+      const a = k / 40 * Math.PI * 2;
+      const x = Math.cos(a) * (28.6 + (k % 2) * 0.5), z = Math.sin(a) * (28.6 + (k % 2) * 0.5);
+      m4.compose(new THREE.Vector3(x, terrainH(x, z) + 0.05, z), q.setFromEuler(new THREE.Euler(rnd(), rnd() * 3, rnd() * 0.4)), sc.set(1, 0.7, 1));
+      curbM.setMatrixAt(ci++, m4);
+    }
+    curbM.count = ci;
+    curbM.castShadow = true;
+    this.group.add(curbM);
+
+    // 农场栅栏（圆周）
+    const fenceParts = [];
+    boxAt(fenceParts, 0.12, 0.95, 0.12, -1.05, 0.48, 0, 0xa8865a);
+    boxAt(fenceParts, 0.12, 0.95, 0.12, 1.05, 0.48, 0, 0xa8865a);
+    boxAt(fenceParts, 2.2, 0.07, 0.05, 0, 0.72, 0, 0xb8946a);
+    boxAt(fenceParts, 2.2, 0.07, 0.05, 0, 0.45, 0, 0xb8946a);
+    const fenceGeo = mergeGeometries(fenceParts);
+    const fenceM = new THREE.InstancedMesh(fenceGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, flatShading: true }), 26);
+    for (let k = 0; k < 26; k++) {
+      const a = k / 26 * Math.PI * 2;
+      const x = -50 + Math.cos(a) * 21, z = 24 + Math.sin(a) * 15;
+      m4.compose(new THREE.Vector3(x, terrainH(x, z), z), q.setFromEuler(new THREE.Euler(0, -a + Math.PI / 2, 0)), sc.set(1, 1, 1));
+      fenceM.setMatrixAt(k, m4);
+    }
+    fenceM.castShadow = true;
+    this.group.add(fenceM);
+
+    // 货箱与酒桶（市集 + 酒馆旁）
+    const goods = [];
+    boxAt(goods, 0.85, 0.85, 0.85, 47.5, terrainH(47.5, -6) + 0.43, -6, 0xc8a060, 0.3);
+    boxAt(goods, 0.7, 0.7, 0.7, 47.6, terrainH(47.5, -6) + 1.2, -6.1, 0xb8905a, 0.5);
+    cylAt(goods, 0.42, 0.46, 0.9, 9, 43.5, terrainH(43.5, 8) + 0.45, 8, 0x9a6f45);
+    cylAt(goods, 0.42, 0.46, 0.9, 9, 44.4, terrainH(44.4, 9) + 0.45, 9, 0x8f6a44);
+    boxAt(goods, 0.8, 0.8, 0.8, 26.5, terrainH(26.5, -24) + 0.4, -24, 0xc8a060, 0.8);
+    const goodsMesh = new THREE.Mesh(mergeGeometries(goods), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, flatShading: true }));
+    goodsMesh.castShadow = true;
+    this.group.add(goodsMesh);
+
+    // 手推车（市集边）
+    const cart = [];
+    const cxx = 40.5, czz = -4, cyy = terrainH(cxx, czz);
+    boxAt(cart, 1.9, 0.55, 1.15, cxx, cyy + 0.75, czz, 0xb8905c, 0.35);
+    boxAt(cart, 0.09, 0.55, 0.09, cxx - 0.95, cyy + 0.55, czz + 0.75, 0x6b5138, 0.35);
+    boxAt(cart, 0.09, 0.55, 0.09, cxx - 0.95, cyy + 0.55, czz - 0.35, 0x6b5138, 0.35);
+    const wheelG = new THREE.CylinderGeometry(0.42, 0.42, 0.09, 10); paint(wheelG, 0x5c4328);
+    wheelG.rotateX(Math.PI / 2); wheelG.translate(cxx + 0.55, cyy + 0.42, czz + 0.62); cart.push(wheelG);
+    const wheelG2 = new THREE.CylinderGeometry(0.42, 0.42, 0.09, 10); paint(wheelG2, 0x5c4328);
+    wheelG2.rotateX(Math.PI / 2); wheelG2.translate(cxx + 0.55, cyy + 0.42, czz - 0.62); cart.push(wheelG2);
+    const sackG = new THREE.SphereGeometry(0.32, 7, 6); paint(sackG, 0xd8c49a);
+    sackG.translate(cxx + 0.3, cyy + 1.2, czz); cart.push(sackG);
+    const cartMesh = new THREE.Mesh(mergeGeometries(cart), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, flatShading: true }));
+    cartMesh.castShadow = true;
+    this.group.add(cartMesh);
+
+    // 晾衣绳（三户人家之间）
+    const clothCols = [0xff9d9d, 0x9dc8ff, 0xffe29d, 0xb0e8c0];
+    const lineGeos = [];
+    for (const [i, j] of [[0, 3], [5, 8], [11, 14]]) {
+      const a = this.houses[i], b = this.houses[j];
+      if (!a || !b) continue;
+      const ax = a.x * 0.9, az = a.z * 0.9, bx = b.x * 0.9, bz = b.z * 0.9;
+      const ay = terrainH(ax, az) + 2.4, by = terrainH(bx, bz) + 2.4;
+      const sag = Math.hypot(bx - ax, bz - az) * 0.06;
+      for (let s = 1; s < 9; s++) {
+        const t = s / 9;
+        const x = ax + (bx - ax) * t, z = az + (bz - az) * t;
+        const y = ay + (by - ay) * t - Math.sin(t * Math.PI) * sag;
+        const knot = new THREE.SphereGeometry(0.03, 4, 4); paint(knot, 0x8a7a5e);
+        knot.translate(x, y, z); lineGeos.push(knot);
+        if (s % 3 === 0) {
+          const cloth = new THREE.PlaneGeometry(0.42, 0.6);
+          paint(cloth, clothCols[(s + i) % clothCols.length]);
+          cloth.translate(x, y - 0.32, z);
+          lineGeos.push(cloth);
+        }
+      }
+    }
+    if (lineGeos.length) {
+      const lineMesh = new THREE.Mesh(mergeGeometries(lineGeos), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, flatShading: true }));
+      this.group.add(lineMesh);
+    }
+
+    // 鸭子（湖面，巡游）
+    this.ducks = [];
+    const duckMat = new THREE.MeshStandardMaterial({ color: 0xfff6e8, roughness: 0.7, flatShading: true });
+    const beakMat = new THREE.MeshStandardMaterial({ color: 0xff9d4e, roughness: 0.6, flatShading: true });
+    for (let k = 0; k < 3; k++) {
+      const d = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.28), duckMat);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.16), duckMat); head.position.set(0.26, 0.16, 0);
+      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.14, 5), beakMat); beak.rotation.z = -Math.PI / 2; beak.position.set(0.4, 0.15, 0);
+      d.add(body, head, beak);
+      d.userData = { a: rnd() * 6.28, r: 9 + rnd() * 16, sp: 0.08 + rnd() * 0.06 };
+      this.group.add(d);
+      this.ducks.push(d);
+    }
+
+    // 飞鸟（高处盘旋）
+    this.birds = [];
+    const wingMat = new THREE.MeshStandardMaterial({ color: 0x6a6a72, roughness: 0.8, side: THREE.DoubleSide, flatShading: true });
+    for (let k = 0; k < 4; k++) {
+      const b = new THREE.Group();
+      const wl = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.22), wingMat); wl.position.x = -0.42;
+      const wr = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.22), wingMat); wr.position.x = 0.42;
+      b.add(wl, wr);
+      b.userData = { wl, wr, a: rnd() * 6.28, r: 26 + rnd() * 30, y: 30 + rnd() * 16, sp: 0.14 + rnd() * 0.1 };
+      this.group.add(b);
+      this.birds.push(b);
+    }
+  }
+
   /* ── 每帧 ── */
   update(dt, t, timeSec, night) {
     if (this.windmill) this.windmill.rotation.z += dt * 0.5;
@@ -811,6 +966,22 @@ export class Town {
     if (this.lanternMats) this.lanternMats.forEach(m => m.emissiveIntensity = 0.2 + night * 2.6);
     if (this.clockFaces) this.clockFaces.forEach(m => m.emissiveIntensity = 0.25 + night * 1.3);
     if (this.flagMesh) this.flagMesh.rotation.y = Math.sin(timeSec * 0.8) * 0.006;
+    if (this.birds) for (const b of this.birds) {
+      const u = b.userData;
+      u.a += dt * u.sp;
+      b.position.set(Math.cos(u.a) * u.r, u.y + Math.sin(u.a * 3) * 1.6, Math.sin(u.a) * u.r);
+      b.rotation.y = -u.a - Math.PI / 2;
+      const f = Math.sin(timeSec * 9 + u.a * 7) * 0.55;
+      u.wl.rotation.z = f; u.wr.rotation.z = -f;
+    }
+    if (this.ducks) for (const d of this.ducks) {
+      const u = d.userData;
+      u.a += dt * u.sp;
+      const x = LAKE.x + Math.cos(u.a) * u.r, z = LAKE.z + Math.sin(u.a) * u.r;
+      d.position.set(x, WATER_Y + 0.1 + Math.sin(timeSec * 2 + u.a * 5) * 0.04, z);
+      d.rotation.y = -u.a - Math.PI / 2;
+      d.rotation.z = Math.sin(timeSec * 1.8 + u.a) * 0.05;
+    }
   }
-  setFogColor(c) { this._fogColor = c; if (this.wheatUni) this.wheatUni.uFogColor.value.copy(c); }
+  setFogColor(c) { this._fogColor = c; if (this.wheatUni) this.wheatUni.uFogColor.value.copy(c); if (this.horizonDisc) this.horizonDisc.material.color.copy(c); }
 }

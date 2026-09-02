@@ -131,7 +131,7 @@ export class Sky {
     this.hemi.color.copy(this._col.hor);
     this.amb.intensity = ambI * 0.4;
     this.scene.fog.color.copy(this._col.fog);
-    this.scene.fog.near = 95; this.scene.fog.far = 300;
+    this.scene.fog.near = 110; this.scene.fog.far = 380;
     return { night, daylight: THREE.MathUtils.clamp(1 - night, 0, 1) };
   }
 }

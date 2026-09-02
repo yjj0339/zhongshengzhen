@@ -1,7 +1,7 @@
 // 众生镇 · 全局配置与调色板
 export const CFG = {
   DAY_LENGTH: 240,          // 一昼夜秒数
-  START_T: 0.685,           // 开局时刻（黄昏金光）
+  START_T: 0.34,            // 开局时刻（上午晴光）
   MAP_R: 118,               // 地图半径
   FOG_FAR: 340,
   AGENT_N: 24,
@@ -9,21 +9,22 @@ export const CFG = {
 };
 
 // 一天内的关键帧：t, 天顶色, 地平色, 雾色, 阳光色, 阳光强度, 环境光强度, 太阳高度角
+// 明亮主题：夜晚是"明亮的蓝调星夜"，不是黑
 const K = (t, sky, hor, fog, sun, sunI, ambI, sunEl, sunAz) => ({ t, sky, hor, fog, sun, sunI, ambI, sunEl, sunAz });
-const C = (h) => h; // hex passthrough
+const C = (h) => h;
 
 export const SKY_KEYS = [
-  K(0.00, C(0x0a0f22), C(0x101a30), C(0x0c1224), C(0x8fa8ff), 0.30, 0.46, 0.75, 0.4),  // 午夜
-  K(0.20, C(0x0d1330), C(0x2a2440), C(0x181a30), C(0xa08fff), 0.32, 0.48, 0.45, 1.2),  // 黎明前
-  K(0.26, C(0x2c3a68), C(0xf2905e), C(0xc98a66), C(0xffb070), 0.75, 0.50, 0.06, 1.5),  // 日出
-  K(0.35, C(0x5a86c8), C(0xcfe3f2), C(0xbdd2e2), C(0xfff2dd), 1.25, 0.72, 0.45, 1.6),  // 上午
-  K(0.50, C(0x4f7fd0), C(0xcfe6f5), C(0xc4dcee), C(0xffffff), 1.45, 0.80, 0.95, 1.7),  // 正午
-  K(0.66, C(0x4a76c2), C(0xd8e0ea), C(0xc9d2da), C(0xffeacc), 1.20, 0.70, 0.50, 1.8),  // 午后
-  K(0.715,C(0x35486e), C(0xffb169), C(0xd99a6a), C(0xffc07a), 0.95, 0.60, 0.12, 1.95), // 黄昏金
-  K(0.755,C(0x1c2340), C(0xe8764e), C(0xa06255), C(0xff8a55), 0.45, 0.42, 0.02, 2.1),  // 日落
-  K(0.80, C(0x0d1330), C(0x3c2c48), C(0x1c1c34), C(0xa888ff), 0.30, 0.44, 0.60, 2.6),  // 暮色
-  K(0.87, C(0x080d1e), C(0x141c36), C(0x0d1326), C(0x9fb4ff), 0.28, 0.42, 0.80, 2.9),  // 夜
-  K(1.00, C(0x0a0f22), C(0x101a30), C(0x0c1224), C(0x8fa8ff), 0.30, 0.46, 0.75, 0.4),  // 回到午夜
+  K(0.00, C(0x8fb2de), C(0xffe2ba), C(0xd9e3ee), C(0xfff0d8), 0.5, 0.66, 0.75, 0.4),   // 星夜（亮）
+  K(0.20, C(0x96b8e2), C(0xffe6c2), C(0xdde6f0), C(0xffe8c8), 0.55, 0.68, 0.45, 1.2),  // 黎明前
+  K(0.26, C(0x9ec8ee), C(0xffd9a6), C(0xf4e5d4), C(0xffcf90), 0.95, 0.76, 0.06, 1.5),  // 日出
+  K(0.35, C(0x8ecaf2), C(0xecf5fc), C(0xe6eff6), C(0xfff6e2), 1.35, 0.88, 0.45, 1.6),  // 上午
+  K(0.50, C(0x7fc2f2), C(0xeaf6fc), C(0xe6eff6), C(0xffffff), 1.5, 0.95, 0.95, 1.7),   // 正午
+  K(0.66, C(0x88bcec), C(0xf2f2f4), C(0xeaf0f4), C(0xfff2dc), 1.3, 0.88, 0.5, 1.8),    // 午后
+  K(0.715,C(0x8cacdf), C(0xffd29a), C(0xf7e3c6), C(0xffcf88), 1.1, 0.8, 0.12, 1.95),   // 黄昏金
+  K(0.755,C(0x84a0d2), C(0xffba88), C(0xeccec4), C(0xffb070), 0.75, 0.7, 0.02, 2.1),   // 日落
+  K(0.80, C(0x8ca8da), C(0xffdcba), C(0xdce2f0), C(0xffe0b8), 0.55, 0.66, 0.5, 2.6),   // 暮色（亮）
+  K(0.87, C(0x82a0d6), C(0xffd6b0), C(0xd4e0ee), C(0xffe4c0), 0.5, 0.64, 0.8, 2.9),    // 夜（明亮星夜）
+  K(1.00, C(0x8fb2de), C(0xffe2ba), C(0xd9e3ee), C(0xfff0d8), 0.5, 0.66, 0.75, 0.4),   // 回到星夜
 ];
 
 export const PAL = {

@@ -23,7 +23,7 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.08;
+renderer.toneMappingExposure = 1.12;
 app.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -35,13 +35,14 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.target.set(0, 8, 6);
 controls.maxPolarAngle = Math.PI * 0.49;
+controls.minPolarAngle = 0.12;
 controls.minDistance = 10;
-controls.maxDistance = 200;
+controls.maxDistance = 135;
 
 /* ── 后期 ── */
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.5, 0.8);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.45, 0.88);
 if (G.quality === 'high') composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
@@ -146,7 +147,7 @@ function tick() {
     lightningAt = timeSec + 3 + Math.random() * 6;
     renderer.toneMappingExposure = 2.6;
     sky.sun.intensity = 3.5;
-    setTimeout(() => { renderer.toneMappingExposure = 1.08; }, 120);
+    setTimeout(() => { renderer.toneMappingExposure = 1.12; }, 120);
   }
 
   // 相机模式
